@@ -27,8 +27,8 @@ To debug in IntelliJ Idea, open the 'Maven Projects' tool window (View
 
 version = "2024.03"
 
-val masterBuild = BuildType{
-    val buildTypeName = "Master Build"
+val mainBuild = BuildType{
+    val buildTypeName = "Main Build"
     name = buildTypeName
     id = RelativeId(buildTypeName.toId())
 
@@ -62,9 +62,46 @@ val masterBuild = BuildType{
     features {}
 }
 
+val releaseBuild = BuildType{
+    val buildTypeName = "Release Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
+
+    vcs {
+        root(DslContext.settingsRoot.id!!)
+        branchFilter = """
+            +:refs/heads/release
+        """.trimIndent()
+        cleanCheckout = true
+        excludeDefaultBranchChanges = true
+    }
+
+    params {
+        param("git.branch.specification", "")
+    }
+
+    createParameters()
+
+    printPullRequestNumber()
+
+    buildAndTest()
+
+    triggers {
+        vcs {
+            branchFilter = """
+            +:refs/heads/release
+        """.trimIndent()
+        }
+    }
+
+    features {}
+}
+
+
 val builds: ArrayList<BuildType> = arrayListOf()
 
-builds.add(masterBuild)
+builds.add(mainBuild)
+builds.add(releaseBuild)
 //builds.add(pullRequestBuild)
 //builds.add(deployBuild)
 
