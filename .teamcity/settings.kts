@@ -36,7 +36,9 @@ To debug in IntelliJ Idea, open the 'Maven Projects' tool window (View
 version = "2024.03"
 
 object MasterBuild : BuildType({
-    name = "Master Build"
+    val buildTypeName = "Master Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
 
     vcs {
         root(DslContext.settingsRoot)
@@ -67,7 +69,9 @@ object MasterBuild : BuildType({
 })
 
 object PullRequestBuild : BuildType({
-    name = "Pull Request Build"
+    val buildTypeName = "Pull Request Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
 
     vcs {
         root(DslContext.settingsRoot)
@@ -94,26 +98,29 @@ object PullRequestBuild : BuildType({
     }
 
     features {
-        commitStatusPublisher {
-            vcsRootExtId = DslContext.settingsRootId.value
-            publisher = github {
-                githubUrl = "https://api.github.com"
-                authType = vcsRoot()
-            }
-        }
-        pullRequests {
-            vcsRootExtId = DslContext.settingsRootId.value
-            provider = github {
-                authType = vcsRoot()
-                filterSourceBranch = "refs/pull/*/merge"
-                filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER
-            }
-        }
+//        commitStatusPublisher {
+//            vcsRootExtId = DslContext.settingsRootId.value
+//            publisher = github {
+//                githubUrl = "https://api.github.com"
+//                authType = vcsRoot()
+//            }
+//        }
+//        pullRequests {
+//            vcsRootExtId = DslContext.settingsRootId.value
+//            provider = github {
+//                authType = vcsRoot()
+//                filterSourceBranch = "refs/pull/*/merge"
+//                filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER
+//            }
+//        }
     }
 })
 
 object DeployBuild : BuildType({
-    name = "Deploy Build"
+    val buildTypeName = "Deploy Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
+
 
     vcs {
         root(DslContext.settingsRoot)
