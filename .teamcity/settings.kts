@@ -10,7 +10,6 @@ import jetbrains.buildServer.configs.kotlin.buildFeatures.PullRequests
 import jetbrains.buildServer.configs.kotlin.buildFeatures.commitStatusPublisher
 import jetbrains.buildServer.configs.kotlin.buildFeatures.pullRequests
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
-import jetbrains.buildServer.configs.kotlin.ui.add
 
 /*
 The settings script is an entry point for defining a TeamCity
@@ -163,25 +162,25 @@ val project = Project {
     buildTypesOrder = builds
 }
 
-for (bt : BuildType in project.buildTypes ) {
-    bt.paused = false
-    val gitSpec = bt.params.findRawParam("git.branch.specification")
-    if (gitSpec != null && gitSpec.value.isNotBlank()) {
-        bt.vcs.branchFilter = """
-            +:*
-            -:<default>
-        """.trimIndent()
-    }
-    if (bt.name == "Pull Request Build" || bt.name == "Master Build") {
-        bt.features.add {
-            feature {
-                type = "xml-report-plugin"
-                param("verbose", "true")
-                param("xmlReportParsing.reportType", "trx")
-                param("xmlReportParsing.reportDirs","%system.teamcity.build.checkoutDir%/test-results/**/*.trx")
-            }
-        }
-    }
+//for (bt : BuildType in project.buildTypes ) {
+//    bt.paused = false
+//    val gitSpec = bt.params.findRawParam("git.branch.specification")
+//    if (gitSpec != null && gitSpec.value.isNotBlank()) {
+//        bt.vcs.branchFilter = """
+//            +:*
+//            -:<default>
+//        """.trimIndent()
+//    }
+//    if (bt.name == "Pull Request Build" || bt.name == "Master Build") {
+//        bt.features.add {
+//            feature {
+//                type = "xml-report-plugin"
+//                param("verbose", "true")
+//                param("xmlReportParsing.reportType", "trx")
+//                param("xmlReportParsing.reportDirs","%system.teamcity.build.checkoutDir%/test-results/**/*.trx")
+//            }
+//        }
+//    }
 //    if (bt.name == "Pull Request Build" || bt.name == "Master Build")
 //    {
 //        bt.features.add {  xmlReport {
@@ -190,6 +189,6 @@ for (bt : BuildType in project.buildTypes ) {
 //            verbose = true
 //        } }
 //    }
-}
+//}
 
 project(project)
