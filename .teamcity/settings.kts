@@ -1,16 +1,5 @@
-
-import CommonSteps.buildAndTest
-import CommonSteps.createParameters
-import CommonSteps.printDeployNumber
-import CommonSteps.printPullRequestNumber
-import CommonSteps.runMakeTest
-import CommonSteps.runSonarScript
 import jetbrains.buildServer.configs.kotlin.*
-import jetbrains.buildServer.configs.kotlin.buildFeatures.PullRequests
-import jetbrains.buildServer.configs.kotlin.buildFeatures.commitStatusPublisher
-import jetbrains.buildServer.configs.kotlin.buildFeatures.pullRequests
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
-
 /*
 The settings script is an entry point for defining a TeamCity
 project hierarchy. The script should contain a single call to the
@@ -35,21 +24,38 @@ To debug in IntelliJ Idea, open the 'Maven Projects' tool window (View
 
 version = "2024.03"
 
-object MasterBuild : BuildType({
+val masterBuild = BuildType{
     val buildTypeName = "Master Build"
     name = buildTypeName
     id = RelativeId(buildTypeName.toId())
 
-})
+    vcs {
+        root(DslContext.settingsRoot.id!!)
+        cleanCheckout = true
+        excludeDefaultBranchChanges = true
+    }
+
+    params {
+        param("git.branch.specification", "")
+    }
+
+
+
+    triggers {
+        vcs {
+        }
+    }
+
+    features {}
+}
 
 val builds: ArrayList<BuildType> = arrayListOf()
 
-builds.add(MasterBuild)
-
+builds.add(masterBuild)
+//builds.add(pullRequestBuild)
+//builds.add(deployBuild)
 
 val project = Project {
-    vcsRoot(DslContext.settingsRoot)
-
     builds.forEach{
         buildType(it)
     }
