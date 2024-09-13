@@ -31,9 +31,12 @@ val masterBuild = BuildType{
     val buildTypeName = "Master Build"
     name = buildTypeName
     id = RelativeId(buildTypeName.toId())
-    
+
     vcs {
         root(DslContext.settingsRoot.id!!)
+        branchFilter = """
+            +:main
+        """.trimIndent()
         cleanCheckout = true
         excludeDefaultBranchChanges = true
     }
@@ -50,6 +53,9 @@ val masterBuild = BuildType{
 
     triggers {
         vcs {
+            branchFilter = """
+            +:main
+        """.trimIndent()
         }
     }
 
