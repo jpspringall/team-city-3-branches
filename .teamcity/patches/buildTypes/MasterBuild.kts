@@ -18,7 +18,7 @@ changeBuildType(RelativeId("MasterBuild")) {
         """.trimIndent()) {
             "Unexpected option value: branchFilter = $branchFilter"
         }
-        branchFilter = "+:main"
+        branchFilter = "+:*"
     }
 
     triggers {
