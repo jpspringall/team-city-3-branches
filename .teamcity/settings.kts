@@ -36,6 +36,7 @@ val masterBuild = BuildType{
         root(DslContext.settingsRoot.id!!)
         branchFilter = """
             +:refs/heads/main
+            +:main
         """.trimIndent()
         cleanCheckout = true
         excludeDefaultBranchChanges = true
@@ -55,6 +56,7 @@ val masterBuild = BuildType{
         vcs {
             branchFilter = """
             +:refs/heads/main
+            +:main
         """.trimIndent()
         }
     }
