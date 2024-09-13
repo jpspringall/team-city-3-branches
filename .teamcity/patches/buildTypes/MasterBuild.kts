@@ -1,7 +1,6 @@
 package patches.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.*
-import jetbrains.buildServer.configs.kotlin.triggers.VcsTrigger
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
 import jetbrains.buildServer.configs.kotlin.ui.*
 
@@ -23,17 +22,13 @@ changeBuildType(RelativeId("MasterBuild")) {
     }
 
     triggers {
-        val trigger1 = find<VcsTrigger> {
+        remove {
             vcs {
                 branchFilter = """
                     +:refs/heads/main
                     +:main
                 """.trimIndent()
             }
-        }
-        trigger1.apply {
-            branchFilter = "+:main"
-
         }
     }
 }
