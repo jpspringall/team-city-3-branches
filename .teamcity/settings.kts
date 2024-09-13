@@ -5,17 +5,12 @@ import CommonSteps.printDeployNumber
 import CommonSteps.printPullRequestNumber
 import CommonSteps.runMakeTest
 import CommonSteps.runSonarScript
-import jetbrains.buildServer.configs.kotlin.BuildType
-import jetbrains.buildServer.configs.kotlin.FailureAction
-import jetbrains.buildServer.configs.kotlin.Project
+import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildFeatures.PullRequests
 import jetbrains.buildServer.configs.kotlin.buildFeatures.commitStatusPublisher
 import jetbrains.buildServer.configs.kotlin.buildFeatures.pullRequests
-import jetbrains.buildServer.configs.kotlin.project
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
 import jetbrains.buildServer.configs.kotlin.ui.add
-import jetbrains.buildServer.configs.kotlin.vcs.GitVcsRoot
-import jetbrains.buildServer.configs.kotlin.version
 
 /*
 The settings script is an entry point for defining a TeamCity
@@ -39,13 +34,13 @@ To debug in IntelliJ Idea, open the 'Maven Projects' tool window (View
 'Debug' option is available in the context menu for the task.
 */
 
-version = "2023.11"
+version = "2024.03"
 
 object MasterBuild : BuildType({
     name = "Master Build"
 
     vcs {
-        root(HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild)
+        root(DslContext.settingsRoot)
         cleanCheckout = true
         excludeDefaultBranchChanges = true
     }
@@ -76,7 +71,7 @@ object PullRequestBuild : BuildType({
     name = "Pull Request Build"
 
     vcs {
-        root(HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild)
+        root(DslContext.settingsRoot)
         cleanCheckout = true
         excludeDefaultBranchChanges = true
     }
@@ -101,20 +96,16 @@ object PullRequestBuild : BuildType({
 
     features {
         commitStatusPublisher {
-            vcsRootExtId = "${HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild.id}"
+            vcsRootExtId = DslContext.settingsRootId.value
             publisher = github {
                 githubUrl = "https://api.github.com"
-                authType = personalToken {
-                    token = "credentialsJSON:a75b57d5-0461-4052-b9c6-58dfd9f2ee53" // This is the PAT
-                }
+                authType = vcsRoot()
             }
         }
         pullRequests {
-            vcsRootExtId = "${HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild.id}"
+            vcsRootExtId = DslContext.settingsRootId.value
             provider = github {
-                authType = token {
-                    token = "credentialsJSON:a75b57d5-0461-4052-b9c6-58dfd9f2ee53" // This is the PAT
-                }
+                authType = vcsRoot()
                 filterSourceBranch = "refs/pull/*/merge"
                 filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER
             }
@@ -126,7 +117,7 @@ object DeployBuild : BuildType({
     name = "Deploy Build"
 
     vcs {
-        root(HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild)
+        root(DslContext.settingsRoot)
         cleanCheckout = true
         excludeDefaultBranchChanges = true
     }
@@ -163,7 +154,7 @@ builds.add(PullRequestBuild)
 builds.add(DeployBuild)
 
 val project = Project {
-    vcsRoot(HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild)
+    vcsRoot(DslContext.settingsRoot)
 
     builds.forEach{
         buildType(it)
@@ -171,19 +162,6 @@ val project = Project {
 
     buildTypesOrder = builds
 }
-
-object HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild : GitVcsRoot({
-    name = "Build VCS Root"
-    url = "https://github.com/jpspringall/team-city-sonar-cube"
-    branch = "refs/heads/master"
-    branchSpec = "%git.branch.specification%"
-    agentCleanPolicy = GitVcsRoot.AgentCleanPolicy.ALWAYS
-    checkoutPolicy = GitVcsRoot.AgentCheckoutPolicy.NO_MIRRORS
-    authMethod = password {
-        userName = "jpspringall"
-        password = "credentialsJSON:e224d815-b2d6-4dc7-9e5c-11f7d85dbd51"
-    }
-})
 
 for (bt : BuildType in project.buildTypes ) {
     bt.paused = false
