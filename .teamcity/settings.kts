@@ -28,6 +28,10 @@ To debug in IntelliJ Idea, open the 'Maven Projects' tool window (View
 version = "2024.03"
 
 val masterBuild = BuildType{
+    val buildTypeName = "Master Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
+    
     vcs {
         root(DslContext.settingsRoot.id!!)
         cleanCheckout = true
