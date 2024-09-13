@@ -4,4 +4,4 @@ xml-loose
 
 testy mc test
 
-masat
+masat trigger
