@@ -292,7 +292,7 @@ val reportPilotBuild = BuildType{
 
     triggers {
         finishBuildTrigger {
-            buildType = deployMainBuild.id.toString()
+            buildType = deployPilotBuild.id.toString()
             branchFilter = mainHead
             successfulOnly = true
         }
