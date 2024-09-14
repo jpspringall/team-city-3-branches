@@ -369,8 +369,6 @@ val project = Project {
             buildType(deployMainBuild)
             buildType(deployPilotBuild)
         }
-        buildType(reportMainBuild)
-        buildType(reportPilotBuild)
     }
 
     sequential  {
@@ -381,7 +379,6 @@ val project = Project {
         }) { // non-default snapshot dependency options
             buildType(deployReleaseBuild)
         }
-        buildType(reportReleaseBuild)
     }
 
         builds.forEach{
