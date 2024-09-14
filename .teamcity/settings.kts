@@ -199,9 +199,9 @@ builds.add(deployPilotBuild)
 
 val project = Project {
     // Disable editing of project and build settings from the UI to avoid issues with TeamCity
-    params {
-        param("teamcity.ui.settings.readOnly", "true")
-    }
+//    params {
+//        param("teamcity.ui.settings.readOnly", "true")
+//    }
 
     sequential  {
         buildType(mainBuild)
