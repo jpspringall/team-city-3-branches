@@ -365,6 +365,7 @@ val project = Project {
         parallel (options = {
             onDependencyFailure = FailureAction.FAIL_TO_START
             onDependencyCancel = FailureAction.CANCEL
+            reuseBuilds = ReuseBuilds.SUCCESSFUL
         }) { // non-default snapshot dependency options
             buildType(deployPilotBuild)
             buildType(deployMainBuild)
