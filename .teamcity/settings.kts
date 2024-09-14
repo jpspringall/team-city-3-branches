@@ -1,5 +1,6 @@
 import CommonSteps.buildAndTest
 import CommonSteps.createParameters
+import CommonSteps.printDeployNumber
 import CommonSteps.printPullRequestNumber
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
@@ -97,12 +98,51 @@ val releaseBuild = BuildType{
     features {}
 }
 
+val deployMainBuild = BuildType{
+
+    val buildTypeName = "Deploy Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
+
+    vcs {
+        root(DslContext.settingsRoot.id!!)
+        branchFilter = """
+            +:refs/heads/main
+        """.trimIndent()
+        cleanCheckout = true
+        excludeDefaultBranchChanges = true
+    }
+
+    buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
+
+    dependencies {
+        snapshot(mainBuild) {
+            onDependencyFailure = FailureAction.FAIL_TO_START
+            onDependencyCancel = FailureAction.CANCEL
+        }
+    }
+
+    params {
+        param("git.branch.specification", "")
+        param("https.private.root.build.step", "%https.private.root%")
+    }
+
+    createParameters()
+
+    printDeployNumber()
+
+    triggers {
+    }
+
+    features {}
+}
+
 
 val builds: ArrayList<BuildType> = arrayListOf()
 
 builds.add(mainBuild)
 builds.add(releaseBuild)
-//builds.add(pullRequestBuild)
+builds.add(deployMainBuild)
 //builds.add(deployBuild)
 
 val project = Project {
