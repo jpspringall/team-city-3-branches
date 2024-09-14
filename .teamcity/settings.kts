@@ -96,46 +96,46 @@ val releaseBuild = BuildType{
     features {}
 }
 
-val deployMainBuild = BuildType{
-
-    val buildTypeName = "Deploy Main Build"
-    name = buildTypeName
-    id = RelativeId(buildTypeName.toId())
-
-    vcs {
-        root(DslContext.settingsRoot)
-        branchFilter = mainHead
-        cleanCheckout = true
-        excludeDefaultBranchChanges = true
-    }
-
-    buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
-
-    dependencies {
-        snapshot(mainBuild) {
-            onDependencyFailure = FailureAction.FAIL_TO_START
-            onDependencyCancel = FailureAction.CANCEL
-        }
-    }
-
-    params {
-        param("git.branch.specification", "")
-    }
-
-    createParameters()
-
-    printDeployNumber()
-
-    triggers {
-        finishBuildTrigger {
-            buildType = mainBuild.id.toString()
-            branchFilter = mainHead
-            successfulOnly = true
-        }
-    }
-
-    features {}
-}
+//val deployMainBuild = BuildType{
+//
+//    val buildTypeName = "Deploy Main Build"
+//    name = buildTypeName
+//    id = RelativeId(buildTypeName.toId())
+//
+//    vcs {
+//        root(DslContext.settingsRoot)
+//        branchFilter = mainHead
+//        cleanCheckout = true
+//        excludeDefaultBranchChanges = true
+//    }
+//
+//    buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
+//
+//    dependencies {
+//        snapshot(mainBuild) {
+//            onDependencyFailure = FailureAction.FAIL_TO_START
+//            onDependencyCancel = FailureAction.CANCEL
+//        }
+//    }
+//
+//    params {
+//        param("git.branch.specification", "")
+//    }
+//
+//    createParameters()
+//
+//    printDeployNumber()
+//
+//    triggers {
+//        finishBuildTrigger {
+//            buildType = mainBuild.id.toString()
+//            branchFilter = mainHead
+//            successfulOnly = true
+//        }
+//    }
+//
+//    features {}
+//}
 
 val deployPilotBuild = BuildType{
 
@@ -219,46 +219,46 @@ val deployReleaseBuild = BuildType{
     features {}
 }
 
-val reportMainBuild = BuildType{
-
-    val buildTypeName = "Report Main Build"
-    name = buildTypeName
-    id = RelativeId(buildTypeName.toId())
-
-    vcs {
-        root(DslContext.settingsRoot)
-        branchFilter = mainHead
-        cleanCheckout = true
-        excludeDefaultBranchChanges = true
-    }
-
-    buildNumberPattern = deployMainBuild.depParamRefs.buildNumber.toString()
-
-    dependencies {
-        snapshot(deployMainBuild) {
-            onDependencyFailure = FailureAction.FAIL_TO_START
-            onDependencyCancel = FailureAction.CANCEL
-        }
-    }
-
-    params {
-        param("git.branch.specification", "")
-    }
-
-    createParameters()
-
-    printReportNumber()
-
-    triggers {
-        finishBuildTrigger {
-            buildType = deployMainBuild.id.toString()
-            branchFilter = mainHead
-            successfulOnly = true
-        }
-    }
-
-    features {}
-}
+//val reportMainBuild = BuildType{
+//
+//    val buildTypeName = "Report Main Build"
+//    name = buildTypeName
+//    id = RelativeId(buildTypeName.toId())
+//
+//    vcs {
+//        root(DslContext.settingsRoot)
+//        branchFilter = mainHead
+//        cleanCheckout = true
+//        excludeDefaultBranchChanges = true
+//    }
+//
+//    buildNumberPattern = deployMainBuild.depParamRefs.buildNumber.toString()
+//
+//    dependencies {
+//        snapshot(deployMainBuild) {
+//            onDependencyFailure = FailureAction.FAIL_TO_START
+//            onDependencyCancel = FailureAction.CANCEL
+//        }
+//    }
+//
+//    params {
+//        param("git.branch.specification", "")
+//    }
+//
+//    createParameters()
+//
+//    printReportNumber()
+//
+//    triggers {
+//        finishBuildTrigger {
+//            buildType = deployMainBuild.id.toString()
+//            branchFilter = mainHead
+//            successfulOnly = true
+//        }
+//    }
+//
+//    features {}
+//}
 
 val reportPilotBuild = BuildType{
 
@@ -346,10 +346,10 @@ val builds: ArrayList<BuildType> = arrayListOf()
 
 builds.add(mainBuild)
 builds.add(releaseBuild)
-builds.add(deployMainBuild)
+//builds.add(deployMainBuild)
 builds.add(deployPilotBuild)
 builds.add(deployReleaseBuild)
-builds.add(reportMainBuild)
+//builds.add(reportMainBuild)
 builds.add(reportPilotBuild)
 builds.add(reportReleaseBuild)
 
