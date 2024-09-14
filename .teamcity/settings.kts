@@ -366,8 +366,8 @@ val project = Project {
             onDependencyFailure = FailureAction.FAIL_TO_START
             onDependencyCancel = FailureAction.CANCEL
         }) { // non-default snapshot dependency options
-            buildType(deployMainBuild)
             buildType(deployPilotBuild)
+            buildType(deployMainBuild)
         }
     }
 
