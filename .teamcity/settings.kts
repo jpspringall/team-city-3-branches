@@ -191,10 +191,10 @@ val deployReleaseBuild = BuildType{
         excludeDefaultBranchChanges = true
     }
 
-    buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
+    buildNumberPattern = releaseBuild.depParamRefs.buildNumber.toString()
 
     dependencies {
-        snapshot(mainBuild) {
+        snapshot(releaseBuild) {
             onDependencyFailure = FailureAction.FAIL_TO_START
             onDependencyCancel = FailureAction.CANCEL
         }
@@ -314,10 +314,10 @@ val reportReleaseBuild = BuildType{
         excludeDefaultBranchChanges = true
     }
 
-    buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
+    buildNumberPattern = releaseBuild.depParamRefs.buildNumber.toString()
 
     dependencies {
-        snapshot(mainBuild) {
+        snapshot(releaseBuild) {
             onDependencyFailure = FailureAction.FAIL_TO_START
             onDependencyCancel = FailureAction.CANCEL
         }
