@@ -100,7 +100,7 @@ val releaseBuild = BuildType{
 
 val deployMainBuild = BuildType{
 
-    val buildTypeName = "Deploy Build"
+    val buildTypeName = "Deploy Main Build"
     name = buildTypeName
     id = RelativeId(buildTypeName.toId())
 
@@ -113,14 +113,53 @@ val deployMainBuild = BuildType{
         excludeDefaultBranchChanges = true
     }
 
-    buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
+//    buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
 
-    dependencies {
-        snapshot(mainBuild) {
-            onDependencyFailure = FailureAction.FAIL_TO_START
-            onDependencyCancel = FailureAction.CANCEL
-        }
+//    dependencies {
+//        snapshot(mainBuild) {
+//            onDependencyFailure = FailureAction.FAIL_TO_START
+//            onDependencyCancel = FailureAction.CANCEL
+//        }
+//    }
+
+    params {
+        param("git.branch.specification", "")
+        param("https.private.root.build.step", "%https.private.root%")
     }
+
+    createParameters()
+
+    printDeployNumber()
+
+    triggers {
+    }
+
+    features {}
+}
+
+val deployPilotBuild = BuildType{
+
+    val buildTypeName = "Deploy Pilot Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
+
+    vcs {
+        root(DslContext.settingsRoot.id!!)
+        branchFilter = """
+            +:refs/heads/main
+        """.trimIndent()
+        cleanCheckout = true
+        excludeDefaultBranchChanges = true
+    }
+
+//    buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
+
+//    dependencies {
+//        snapshot(mainBuild) {
+//            onDependencyFailure = FailureAction.FAIL_TO_START
+//            onDependencyCancel = FailureAction.CANCEL
+//        }
+//    }
 
     params {
         param("git.branch.specification", "")
@@ -138,19 +177,52 @@ val deployMainBuild = BuildType{
 }
 
 
-val builds: ArrayList<BuildType> = arrayListOf()
+//val builds: ArrayList<BuildType> = arrayListOf()
 
-builds.add(mainBuild)
-builds.add(releaseBuild)
-builds.add(deployMainBuild)
+//builds.add(mainBuild)
+//builds.add(releaseBuild)
+//builds.add(deployMainBuild)
 //builds.add(deployBuild)
 
+//val project = Project {
+//    // Disable editing of project and build settings from the UI to avoid issues with TeamCity
+//    params {
+//        param("teamcity.ui.settings.readOnly", "true")
+//    }
+//
+//    builds.forEach{
+//        buildType(it)
+//    }
+//
+//    buildTypesOrder = builds
+//}
+
 val project = Project {
-    builds.forEach{
-        buildType(it)
+    // Disable editing of project and build settings from the UI to avoid issues with TeamCity
+    params {
+        param("teamcity.ui.settings.readOnly", "true")
     }
 
-    buildTypesOrder = builds
+    //builds.add(mainBuild)
+//builds.add(releaseBuild)
+//builds.add(deployMainBuild)
+//builds.add(deployBuild)
+
+    buildType(mainBuild)
+    buildType(releaseBuild)
+    buildType(deployMainBuild)
+    buildType(deployPilotBuild)
+
+    sequential  {
+        buildType(mainBuild)
+        parallel (options = {
+            onDependencyFailure = FailureAction.FAIL_TO_START
+            onDependencyCancel = FailureAction.CANCEL
+        }) { // non-default snapshot dependency options
+            buildType(deployMainBuild)
+            buildType(deployPilotBuild)
+        }
+    }
 }
 
 project(project)
