@@ -1,21 +1,11 @@
-
 import CommonSteps.buildAndTest
 import CommonSteps.createParameters
 import CommonSteps.printDeployNumber
 import CommonSteps.printPullRequestNumber
-import CommonSteps.runMakeTest
-import CommonSteps.runSonarScript
-import jetbrains.buildServer.configs.kotlin.BuildType
-import jetbrains.buildServer.configs.kotlin.FailureAction
-import jetbrains.buildServer.configs.kotlin.Project
-import jetbrains.buildServer.configs.kotlin.buildFeatures.PullRequests
-import jetbrains.buildServer.configs.kotlin.buildFeatures.commitStatusPublisher
-import jetbrains.buildServer.configs.kotlin.buildFeatures.pullRequests
-import jetbrains.buildServer.configs.kotlin.project
+import CommonSteps.printReportNumber
+import jetbrains.buildServer.configs.kotlin.*
+import jetbrains.buildServer.configs.kotlin.triggers.finishBuildTrigger
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
-import jetbrains.buildServer.configs.kotlin.ui.add
-import jetbrains.buildServer.configs.kotlin.vcs.GitVcsRoot
-import jetbrains.buildServer.configs.kotlin.version
 
 /*
 The settings script is an entry point for defining a TeamCity
@@ -39,13 +29,19 @@ To debug in IntelliJ Idea, open the 'Maven Projects' tool window (View
 'Debug' option is available in the context menu for the task.
 */
 
-version = "2023.11"
+version = "2024.03"
 
-object MasterBuild : BuildType({
-    name = "Master Build"
+val mainHead = "+:refs/heads/main"
+val releaseHead = "+:refs/heads/release"
+
+val mainBuild = BuildType{
+    val buildTypeName = "Main Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
 
     vcs {
-        root(HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild)
+        root(DslContext.settingsRoot)
+        branchFilter = mainHead
         cleanCheckout = true
         excludeDefaultBranchChanges = true
     }
@@ -58,83 +54,65 @@ object MasterBuild : BuildType({
 
     printPullRequestNumber()
 
-    runMakeTest()
-
     buildAndTest()
-
-    runSonarScript()
 
     triggers {
         vcs {
+            branchFilter = mainHead
         }
     }
 
     features {}
-})
+}
 
-object PullRequestBuild : BuildType({
-    name = "Pull Request Build"
+val releaseBuild = BuildType{
+    val buildTypeName = "Release Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
 
     vcs {
-        root(HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild)
+        root(DslContext.settingsRoot)
+        branchFilter = releaseHead
         cleanCheckout = true
         excludeDefaultBranchChanges = true
     }
 
     params {
-        param("git.branch.specification", "+:refs/pull/*/merge")
+        param("git.branch.specification", "")
     }
+
     createParameters()
 
     printPullRequestNumber()
 
-    runMakeTest()
-
     buildAndTest()
-
-    runSonarScript()
 
     triggers {
         vcs {
+            branchFilter = releaseHead
         }
     }
 
-    features {
-        commitStatusPublisher {
-            vcsRootExtId = "${HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild.id}"
-            publisher = github {
-                githubUrl = "https://api.github.com"
-                authType = personalToken {
-                    token = "credentialsJSON:a75b57d5-0461-4052-b9c6-58dfd9f2ee53" // This is the PAT
-                }
-            }
-        }
-        pullRequests {
-            vcsRootExtId = "${HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild.id}"
-            provider = github {
-                authType = token {
-                    token = "credentialsJSON:a75b57d5-0461-4052-b9c6-58dfd9f2ee53" // This is the PAT
-                }
-                filterSourceBranch = "refs/pull/*/merge"
-                filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER
-            }
-        }
-    }
-})
+    features {}
+}
 
-object DeployBuild : BuildType({
-    name = "Deploy Build"
+val deployMainBuild = BuildType{
+
+    val buildTypeName = "Deploy Main Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
 
     vcs {
-        root(HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild)
+        root(DslContext.settingsRoot)
+        branchFilter = mainHead
         cleanCheckout = true
         excludeDefaultBranchChanges = true
     }
 
-    buildNumberPattern = MasterBuild.depParamRefs.buildNumber.toString()
+    buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
 
     dependencies {
-        snapshot(MasterBuild) {
+        snapshot(mainBuild) {
             onDependencyFailure = FailureAction.FAIL_TO_START
             onDependencyCancel = FailureAction.CANCEL
         }
@@ -149,69 +127,265 @@ object DeployBuild : BuildType({
     printDeployNumber()
 
     triggers {
-        vcs {
+        finishBuildTrigger {
+            buildType = mainBuild.id.toString()
+            branchFilter = mainHead
+            successfulOnly = true
         }
     }
 
     features {}
-})
+}
+
+val deployPilotBuild = BuildType{
+
+    val buildTypeName = "Deploy Pilot Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
+
+    vcs {
+        root(DslContext.settingsRoot)
+        branchFilter = mainHead
+        cleanCheckout = true
+        excludeDefaultBranchChanges = true
+    }
+
+   buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
+
+    dependencies {
+        snapshot(mainBuild) {
+            onDependencyFailure = FailureAction.FAIL_TO_START
+            onDependencyCancel = FailureAction.CANCEL
+        }
+    }
+
+    params {
+        param("git.branch.specification", "")
+    }
+
+    createParameters()
+
+    printDeployNumber()
+
+    triggers {
+        finishBuildTrigger {
+            buildType = mainBuild.id.toString()
+            branchFilter = mainHead
+            successfulOnly = true
+        }
+    }
+
+    features {}
+}
+
+val deployReleaseBuild = BuildType{
+
+    val buildTypeName = "Deploy Release Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
+
+    vcs {
+        root(DslContext.settingsRoot)
+        branchFilter = releaseHead
+        cleanCheckout = true
+        excludeDefaultBranchChanges = true
+    }
+
+    buildNumberPattern = releaseBuild.depParamRefs.buildNumber.toString()
+
+    dependencies {
+        snapshot(releaseBuild) {
+            onDependencyFailure = FailureAction.FAIL_TO_START
+            onDependencyCancel = FailureAction.CANCEL
+        }
+    }
+
+    params {
+        param("git.branch.specification", "")
+    }
+
+    createParameters()
+
+    printDeployNumber()
+
+    triggers {
+        finishBuildTrigger {
+            buildType = releaseBuild.id.toString()
+            branchFilter = releaseHead
+            successfulOnly = true
+        }
+    }
+
+    features {}
+}
+
+val reportMainBuild = BuildType{
+
+    val buildTypeName = "Report Main Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
+
+    vcs {
+        root(DslContext.settingsRoot)
+        branchFilter = mainHead
+        cleanCheckout = true
+        excludeDefaultBranchChanges = true
+    }
+
+    buildNumberPattern = deployMainBuild.depParamRefs.buildNumber.toString()
+
+    dependencies {
+        snapshot(deployMainBuild) {
+            onDependencyFailure = FailureAction.FAIL_TO_START
+            onDependencyCancel = FailureAction.CANCEL
+        }
+    }
+
+    params {
+        param("git.branch.specification", "")
+    }
+
+    createParameters()
+
+    printReportNumber()
+
+    triggers {
+        finishBuildTrigger {
+            buildType = deployMainBuild.id.toString()
+            branchFilter = mainHead
+            successfulOnly = true
+        }
+    }
+
+    features {}
+}
+
+val reportPilotBuild = BuildType{
+
+    val buildTypeName = "Report Pilot Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
+
+    vcs {
+        root(DslContext.settingsRoot)
+        branchFilter = mainHead
+        cleanCheckout = true
+        excludeDefaultBranchChanges = true
+    }
+
+    buildNumberPattern = deployPilotBuild.depParamRefs.buildNumber.toString()
+
+    dependencies {
+        snapshot(deployPilotBuild) {
+            onDependencyFailure = FailureAction.FAIL_TO_START
+            onDependencyCancel = FailureAction.CANCEL
+        }
+    }
+
+    params {
+        param("git.branch.specification", "")
+    }
+
+    createParameters()
+
+    printReportNumber()
+
+    triggers {
+        finishBuildTrigger {
+            buildType = deployPilotBuild.id.toString()
+            branchFilter = mainHead
+            successfulOnly = true
+        }
+    }
+
+    features {}
+}
+
+val reportReleaseBuild = BuildType{
+
+    val buildTypeName = "Report Release Build"
+    name = buildTypeName
+    id = RelativeId(buildTypeName.toId())
+
+    vcs {
+        root(DslContext.settingsRoot)
+        branchFilter = releaseHead
+        cleanCheckout = true
+        excludeDefaultBranchChanges = true
+    }
+
+    buildNumberPattern = deployReleaseBuild.depParamRefs.buildNumber.toString()
+
+    dependencies {
+        snapshot(deployReleaseBuild) {
+            onDependencyFailure = FailureAction.FAIL_TO_START
+            onDependencyCancel = FailureAction.CANCEL
+        }
+    }
+
+    params {
+        param("git.branch.specification", "")
+    }
+
+    createParameters()
+
+    printReportNumber()
+
+    triggers {
+        finishBuildTrigger {
+            buildType = deployReleaseBuild.id.toString()
+            branchFilter = releaseHead
+            successfulOnly = true
+        }
+    }
+
+    features {}
+}
 
 val builds: ArrayList<BuildType> = arrayListOf()
 
-builds.add(MasterBuild)
-builds.add(PullRequestBuild)
-builds.add(DeployBuild)
+builds.add(mainBuild)
+builds.add(releaseBuild)
+builds.add(deployMainBuild)
+builds.add(deployPilotBuild)
+builds.add(deployReleaseBuild)
+builds.add(reportMainBuild)
+builds.add(reportPilotBuild)
+builds.add(reportReleaseBuild)
+
 
 val project = Project {
-    vcsRoot(HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild)
+    // Disable editing of project and build settings from the UI to avoid issues with TeamCity
+//    params {
+//        param("teamcity.ui.settings.readOnly", "true")
+//    }
 
-    builds.forEach{
+    sequential  {
+        buildType(mainBuild)
+        parallel (options = {
+            onDependencyFailure = FailureAction.FAIL_TO_START
+            onDependencyCancel = FailureAction.CANCEL
+        }) { // non-default snapshot dependency options
+            buildType(deployMainBuild)
+            buildType(deployPilotBuild)
+        }
+    }
+
+    sequential  {
+        buildType(releaseBuild)
+        sequential (options = {
+            onDependencyFailure = FailureAction.FAIL_TO_START
+            onDependencyCancel = FailureAction.CANCEL
+        }) { // non-default snapshot dependency options
+            buildType(deployReleaseBuild)
+        }
+    }
+
+        builds.forEach{
         buildType(it)
     }
 
     buildTypesOrder = builds
-}
-
-object HttpsGithubComJpspringallTeamCitySonarCubeRefsHeadsBuild : GitVcsRoot({
-    name = "Build VCS Root"
-    url = "https://github.com/jpspringall/team-city-sonar-cube"
-    branch = "refs/heads/master"
-    branchSpec = "%git.branch.specification%"
-    agentCleanPolicy = GitVcsRoot.AgentCleanPolicy.ALWAYS
-    checkoutPolicy = GitVcsRoot.AgentCheckoutPolicy.NO_MIRRORS
-    authMethod = password {
-        userName = "jpspringall"
-        password = "credentialsJSON:e224d815-b2d6-4dc7-9e5c-11f7d85dbd51"
-    }
-})
-
-for (bt : BuildType in project.buildTypes ) {
-    bt.paused = false
-    val gitSpec = bt.params.findRawParam("git.branch.specification")
-    if (gitSpec != null && gitSpec.value.isNotBlank()) {
-        bt.vcs.branchFilter = """
-            +:*
-            -:<default>
-        """.trimIndent()
-    }
-    if (bt.name == "Pull Request Build" || bt.name == "Master Build") {
-        bt.features.add {
-            feature {
-                type = "xml-report-plugin"
-                param("verbose", "true")
-                param("xmlReportParsing.reportType", "trx")
-                param("xmlReportParsing.reportDirs","%system.teamcity.build.checkoutDir%/test-results/**/*.trx")
-            }
-        }
-    }
-//    if (bt.name == "Pull Request Build" || bt.name == "Master Build")
-//    {
-//        bt.features.add {  xmlReport {
-//            reportType = XmlReport.XmlReportType.TRX
-//            rules = "%system.teamcity.build.checkoutDir%/test-results/**/*.trx" //Remember to match this in test output
-//            verbose = true
-//        } }
-//    }
 }
 
 project(project)
