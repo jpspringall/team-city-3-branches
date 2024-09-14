@@ -3,7 +3,9 @@ import CommonSteps.createParameters
 import CommonSteps.printDeployNumber
 import CommonSteps.printPullRequestNumber
 import jetbrains.buildServer.configs.kotlin.*
+import jetbrains.buildServer.configs.kotlin.triggers.finishBuildTrigger
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
+
 /*
 The settings script is an entry point for defining a TeamCity
 project hierarchy. The script should contain a single call to the
@@ -28,16 +30,17 @@ To debug in IntelliJ Idea, open the 'Maven Projects' tool window (View
 
 version = "2024.03"
 
+val mainHead = "+:refs/heads/main"
+val releaseHead = "+:refs/heads/release"
+
 val mainBuild = BuildType{
     val buildTypeName = "Main Build"
     name = buildTypeName
     id = RelativeId(buildTypeName.toId())
 
     vcs {
-        root(DslContext.settingsRoot.id!!)
-        branchFilter = """
-            +:refs/heads/main
-        """.trimIndent()
+        root(DslContext.settingsRoot)
+        branchFilter = mainHead
         cleanCheckout = true
         excludeDefaultBranchChanges = true
     }
@@ -54,9 +57,7 @@ val mainBuild = BuildType{
 
     triggers {
         vcs {
-            branchFilter = """
-            +:refs/heads/main
-        """.trimIndent()
+            branchFilter = mainHead
         }
     }
 
@@ -69,10 +70,8 @@ val releaseBuild = BuildType{
     id = RelativeId(buildTypeName.toId())
 
     vcs {
-        root(DslContext.settingsRoot.id!!)
-        branchFilter = """
-            +:refs/heads/release
-        """.trimIndent()
+        root(DslContext.settingsRoot)
+        branchFilter = releaseHead
         cleanCheckout = true
         excludeDefaultBranchChanges = true
     }
@@ -89,9 +88,7 @@ val releaseBuild = BuildType{
 
     triggers {
         vcs {
-            branchFilter = """
-            +:refs/heads/release
-        """.trimIndent()
+            branchFilter = releaseHead
         }
     }
 
@@ -105,22 +102,20 @@ val deployMainBuild = BuildType{
     id = RelativeId(buildTypeName.toId())
 
     vcs {
-        root(DslContext.settingsRoot.id!!)
-        branchFilter = """
-            +:refs/heads/main
-        """.trimIndent()
+        root(DslContext.settingsRoot)
+        branchFilter = mainHead
         cleanCheckout = true
         excludeDefaultBranchChanges = true
     }
 
-//    buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
+    buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
 
-//    dependencies {
-//        snapshot(mainBuild) {
-//            onDependencyFailure = FailureAction.FAIL_TO_START
-//            onDependencyCancel = FailureAction.CANCEL
-//        }
-//    }
+    dependencies {
+        snapshot(mainBuild) {
+            onDependencyFailure = FailureAction.FAIL_TO_START
+            onDependencyCancel = FailureAction.CANCEL
+        }
+    }
 
     params {
         param("git.branch.specification", "")
@@ -131,6 +126,10 @@ val deployMainBuild = BuildType{
     printDeployNumber()
 
     triggers {
+        finishBuildTrigger {
+            buildType = mainBuild.id.toString()
+            branchFilter = mainHead
+        }
     }
 
     features {}
@@ -143,22 +142,20 @@ val deployPilotBuild = BuildType{
     id = RelativeId(buildTypeName.toId())
 
     vcs {
-        root(DslContext.settingsRoot.id!!)
-        branchFilter = """
-            +:refs/heads/main
-        """.trimIndent()
+        root(DslContext.settingsRoot)
+        branchFilter = mainHead
         cleanCheckout = true
         excludeDefaultBranchChanges = true
     }
 
-//    buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
+   buildNumberPattern = mainBuild.depParamRefs.buildNumber.toString()
 
-//    dependencies {
-//        snapshot(mainBuild) {
-//            onDependencyFailure = FailureAction.FAIL_TO_START
-//            onDependencyCancel = FailureAction.CANCEL
-//        }
-//    }
+    dependencies {
+        snapshot(mainBuild) {
+            onDependencyFailure = FailureAction.FAIL_TO_START
+            onDependencyCancel = FailureAction.CANCEL
+        }
+    }
 
     params {
         param("git.branch.specification", "")
@@ -182,18 +179,6 @@ builds.add(releaseBuild)
 builds.add(deployMainBuild)
 builds.add(deployPilotBuild)
 
-//val project = Project {
-//    // Disable editing of project and build settings from the UI to avoid issues with TeamCity
-//    params {
-//        param("teamcity.ui.settings.readOnly", "true")
-//    }
-//
-//    builds.forEach{
-//        buildType(it)
-//    }
-//
-//    buildTypesOrder = builds
-//}
 
 val project = Project {
     // Disable editing of project and build settings from the UI to avoid issues with TeamCity
