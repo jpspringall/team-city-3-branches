@@ -65,4 +65,19 @@ object CommonSteps {
             }
         }
     }
+
+    fun BuildType.printReportNumber(
+    ) {
+        steps {
+            script {
+                name = "Print Report Number teamcity-sonar"
+                scriptContent = """
+                #!/bin/bash
+                echo "Running deployment"
+                counter=%build.counter%
+                echo "Counter is: ${'$'}counter"
+            """.trimIndent()
+            }
+        }
+    }
 }
