@@ -177,12 +177,12 @@ val deployPilotBuild = BuildType{
 }
 
 
-//val builds: ArrayList<BuildType> = arrayListOf()
+val builds: ArrayList<BuildType> = arrayListOf()
 
-//builds.add(mainBuild)
-//builds.add(releaseBuild)
-//builds.add(deployMainBuild)
-//builds.add(deployBuild)
+builds.add(mainBuild)
+builds.add(releaseBuild)
+builds.add(deployMainBuild)
+builds.add(deployPilotBuild)
 
 //val project = Project {
 //    // Disable editing of project and build settings from the UI to avoid issues with TeamCity
@@ -203,16 +203,6 @@ val project = Project {
         param("teamcity.ui.settings.readOnly", "true")
     }
 
-    //builds.add(mainBuild)
-//builds.add(releaseBuild)
-//builds.add(deployMainBuild)
-//builds.add(deployBuild)
-
-    buildType(mainBuild)
-    buildType(releaseBuild)
-    buildType(deployMainBuild)
-    buildType(deployPilotBuild)
-
     sequential  {
         buildType(mainBuild)
         parallel (options = {
@@ -223,6 +213,12 @@ val project = Project {
             buildType(deployPilotBuild)
         }
     }
+
+        builds.forEach{
+        buildType(it)
+    }
+
+    buildTypesOrder = builds
 }
 
 project(project)
