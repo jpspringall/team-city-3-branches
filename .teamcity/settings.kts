@@ -124,7 +124,6 @@ val deployMainBuild = BuildType{
 
     params {
         param("git.branch.specification", "")
-        param("https.private.root.build.step", "%https.private.root%")
     }
 
     createParameters()
@@ -163,7 +162,6 @@ val deployPilotBuild = BuildType{
 
     params {
         param("git.branch.specification", "")
-        param("https.private.root.build.step", "%https.private.root%")
     }
 
     createParameters()
