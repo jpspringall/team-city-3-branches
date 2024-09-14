@@ -129,6 +129,7 @@ val deployMainBuild = BuildType{
         finishBuildTrigger {
             buildType = mainBuild.id.toString()
             branchFilter = mainHead
+            successfulOnly = true
         }
     }
 
