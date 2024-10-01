@@ -26,6 +26,8 @@ echo "User $user";
 echo "Number $number"
 echo "Version $version"
 
+#Some comment
+
 #Not needed for now
 cd project
 
