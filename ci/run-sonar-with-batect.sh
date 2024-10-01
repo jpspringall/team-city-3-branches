@@ -28,6 +28,8 @@ echo "Version $version"
 
 #Some comment
 
+#branch Comment
+
 #Not needed for now
 cd project
 
