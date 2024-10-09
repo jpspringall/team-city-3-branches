@@ -15,3 +15,5 @@ Squash 2
 Squash 3
 
 Rebase 1
+
+Rebase 2
